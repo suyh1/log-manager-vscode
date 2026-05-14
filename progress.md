@@ -19,6 +19,13 @@
 - Added parser tests first, observed RED because `src/core/logParser.ts` was missing, then implemented Babel AST detection for direct `console.*` calls.
 - Ran parser and config unit tests successfully.
 - Ran `npm run compile` successfully after parser implementation.
+- Added Vue SFC script/script-setup extraction and Vue line mapping tests.
+- Added workspace file matching, source scanning, safe text edit generation, insertion formatting, Webview protocol guards, and dashboard filtering tests.
+- Implemented WebviewPanel host with scan, navigate, delete, comment, and uncomment message handlers.
+- Implemented React dashboard with toolbar, method/file filters, log table, detail pane, diagnostics, and preview modal.
+- Added README, CHANGELOG, LICENSE, `.vscodeignore`, and VSIX packaging.
+- Moved bundled-only dependencies to devDependencies to reduce packaged VSIX size.
+- Built `log-manager-0.0.1.vsix`.
 
 ## Verification
 
@@ -26,3 +33,7 @@
 - `npm run test:unit -- test/unit/config.test.ts` passed 4 tests.
 - `npm run test:unit -- test/unit/logParser.test.ts` passed 5 tests.
 - `npm run compile` succeeded after parser implementation.
+- `npm run compile` succeeded after Webview implementation.
+- `npm test` passed 10 test files and 31 tests.
+- `npm run package` produced `log-manager-0.0.1.vsix` with 370 files and a 1.98 MB VSIX.
+- `npm audit --omit=dev` found 0 production vulnerabilities.

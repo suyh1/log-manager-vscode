@@ -27,6 +27,22 @@ export interface LogManagerConfig {
 
 const defaultMethods = [...LOG_METHODS];
 
+export function createDefaultConfig(): LogManagerConfig {
+  return {
+    enabledMethods: defaultMethods,
+    defaultMethod: "log",
+    includeFileName: true,
+    includeLineNumber: true,
+    includeFunctionName: false,
+    prefix: "[LM]",
+    quoteStyle: "double",
+    semicolon: true,
+    preserveMarker: "log-manager:keep",
+    generatedMarker: "[LM]",
+    excludeGlobs: DEFAULT_EXCLUDE_GLOBS
+  };
+}
+
 export function isLogMethod(value: unknown): value is LogMethod {
   return typeof value === "string" && (LOG_METHODS as readonly string[]).includes(value);
 }
@@ -66,19 +82,20 @@ function normalizeStringArray(value: unknown, fallback: string[]): string[] {
 
 export function getLogManagerConfig(): LogManagerConfig {
   const configuration = vscode.workspace.getConfiguration("logManager");
-  const enabledMethods = normalizeLogMethods(configuration.get("enabledMethods", defaultMethods));
+  const defaults = createDefaultConfig();
+  const enabledMethods = normalizeLogMethods(configuration.get("enabledMethods", defaults.enabledMethods));
 
   return {
     enabledMethods,
-    defaultMethod: normalizeDefaultMethod(configuration.get("defaultMethod", "log"), enabledMethods),
-    includeFileName: configuration.get("includeFileName", true),
-    includeLineNumber: configuration.get("includeLineNumber", true),
-    includeFunctionName: configuration.get("includeFunctionName", false),
-    prefix: configuration.get("prefix", "[LM]"),
-    quoteStyle: normalizeQuoteStyle(configuration.get("quoteStyle", "double")),
-    semicolon: configuration.get("semicolon", true),
-    preserveMarker: configuration.get("preserveMarker", "log-manager:keep"),
-    generatedMarker: configuration.get("generatedMarker", "[LM]"),
-    excludeGlobs: normalizeStringArray(configuration.get("excludeGlobs", DEFAULT_EXCLUDE_GLOBS), DEFAULT_EXCLUDE_GLOBS)
+    defaultMethod: normalizeDefaultMethod(configuration.get("defaultMethod", defaults.defaultMethod), enabledMethods),
+    includeFileName: configuration.get("includeFileName", defaults.includeFileName),
+    includeLineNumber: configuration.get("includeLineNumber", defaults.includeLineNumber),
+    includeFunctionName: configuration.get("includeFunctionName", defaults.includeFunctionName),
+    prefix: configuration.get("prefix", defaults.prefix),
+    quoteStyle: normalizeQuoteStyle(configuration.get("quoteStyle", defaults.quoteStyle)),
+    semicolon: configuration.get("semicolon", defaults.semicolon),
+    preserveMarker: configuration.get("preserveMarker", defaults.preserveMarker),
+    generatedMarker: configuration.get("generatedMarker", defaults.generatedMarker),
+    excludeGlobs: normalizeStringArray(configuration.get("excludeGlobs", defaults.excludeGlobs), defaults.excludeGlobs)
   };
 }

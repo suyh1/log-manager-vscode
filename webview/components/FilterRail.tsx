@@ -1,0 +1,92 @@
+import { AlertTriangle, FileCode2, ShieldCheck } from "lucide-react";
+import { LOG_METHODS, LogMethod, LogSummary, ScanDiagnostic } from "../../src/domain/logTypes";
+
+interface FilterRailProps {
+  summary: LogSummary;
+  files: string[];
+  activeMethods: LogMethod[];
+  activeFile?: string;
+  includePreserved: boolean;
+  diagnostics: ScanDiagnostic[];
+  onToggleMethod(method: LogMethod): void;
+  onFileChange(filePath: string | undefined): void;
+  onIncludePreservedChange(value: boolean): void;
+}
+
+export function FilterRail(props: FilterRailProps) {
+  return (
+    <aside className="filter-rail" aria-label="Log filters">
+      <div className="metric-board">
+        <Metric label="Logs" value={props.summary.total} />
+        <Metric label="Files" value={props.summary.files} />
+        <Metric label="Generated" value={props.summary.generated} />
+        <Metric label="Preserved" value={props.summary.preserved} />
+      </div>
+
+      <section className="rail-section">
+        <h2>Methods</h2>
+        <div className="method-grid">
+          {LOG_METHODS.map((method) => (
+            <button
+              key={method}
+              type="button"
+              className={props.activeMethods.includes(method) ? `method-chip method-${method} active` : `method-chip method-${method}`}
+              onClick={() => props.onToggleMethod(method)}
+            >
+              <span>{method}</span>
+              <strong>{props.summary.byMethod[method]}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="rail-section">
+        <h2>Files</h2>
+        <label className="select-row">
+          <FileCode2 size={15} aria-hidden="true" />
+          <select value={props.activeFile ?? ""} onChange={(event) => props.onFileChange(event.target.value || undefined)}>
+            <option value="">All files</option>
+            {props.files.map((file) => (
+              <option key={file} value={file}>
+                {file}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      <section className="rail-section">
+        <label className="switch-row">
+          <ShieldCheck size={15} aria-hidden="true" />
+          <span>Show preserved logs</span>
+          <input
+            type="checkbox"
+            checked={props.includePreserved}
+            onChange={(event) => props.onIncludePreservedChange(event.target.checked)}
+          />
+        </label>
+      </section>
+
+      {props.diagnostics.length > 0 ? (
+        <section className="rail-section diagnostics">
+          <h2>
+            <AlertTriangle size={15} aria-hidden="true" />
+            Diagnostics
+          </h2>
+          {props.diagnostics.slice(0, 4).map((diagnostic) => (
+            <p key={`${diagnostic.uri}:${diagnostic.message}`}>{diagnostic.filePath}: {diagnostic.message}</p>
+          ))}
+        </section>
+      ) : null}
+    </aside>
+  );
+}
+
+function Metric(props: { label: string; value: number }) {
+  return (
+    <div className="metric">
+      <span>{props.label}</span>
+      <strong>{props.value}</strong>
+    </div>
+  );
+}

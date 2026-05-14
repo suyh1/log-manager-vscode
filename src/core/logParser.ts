@@ -2,6 +2,7 @@ import { parse } from "@babel/parser";
 import traverse from "@babel/traverse";
 import type { CallExpression, Expression, MemberExpression, OptionalCallExpression, V8IntrinsicIdentifier } from "@babel/types";
 import { LOG_METHODS, LogEntry, LogMethod, ScanDiagnostic } from "../domain/logTypes";
+import { extractVueScriptBlocks } from "./vueBlocks";
 
 interface ParseConsoleLogsOptions {
   uri: string;
@@ -97,6 +98,30 @@ export function parseConsoleLogs(source: string, options: ParseConsoleLogsOption
       ]
     };
   }
+}
+
+export function parseVueConsoleLogs(source: string, options: ParseConsoleLogsOptions): ParseConsoleLogsResult {
+  const blocks = extractVueScriptBlocks(source, options.filePath);
+
+  if (blocks.length === 0) {
+    return { entries: [], diagnostics: [] };
+  }
+
+  return blocks.reduce<ParseConsoleLogsResult>(
+    (result, block) => {
+      const parsed = parseConsoleLogs(block.content, {
+        ...options,
+        lineOffset: block.startLine - 1,
+        columnOffset: block.startColumn
+      });
+
+      result.entries.push(...parsed.entries);
+      result.diagnostics.push(...parsed.diagnostics);
+
+      return result;
+    },
+    { entries: [], diagnostics: [] }
+  );
 }
 
 function getConsoleMethod(callee: CallExpression["callee"] | OptionalCallExpression["callee"]): LogMethod | undefined {

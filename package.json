@@ -28,8 +28,11 @@
     "onCommand:logManager.openDashboard",
     "onCommand:logManager.scanWorkspace",
     "onCommand:logManager.insertLog",
+    "onCommand:logManager.insertInfo",
+    "onCommand:logManager.insertDebug",
     "onCommand:logManager.insertWarn",
     "onCommand:logManager.insertError",
+    "onCommand:logManager.insertTable",
     "onCommand:logManager.removeCurrentFileLogs",
     "onCommand:logManager.removeWorkspaceLogs",
     "onCommand:logManager.commentCurrentFileLogs",
@@ -53,6 +56,16 @@
         "category": "Log Manager"
       },
       {
+        "command": "logManager.insertInfo",
+        "title": "Log Manager: Insert Console Info",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.insertDebug",
+        "title": "Log Manager: Insert Console Debug",
+        "category": "Log Manager"
+      },
+      {
         "command": "logManager.insertWarn",
         "title": "Log Manager: Insert Console Warn",
         "category": "Log Manager"
@@ -60,6 +73,11 @@
       {
         "command": "logManager.insertError",
         "title": "Log Manager: Insert Console Error",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.insertTable",
+        "title": "Log Manager: Insert Console Table",
         "category": "Log Manager"
       },
       {
@@ -190,14 +208,29 @@
           "group": "navigation@50"
         },
         {
-          "command": "logManager.insertWarn",
+          "command": "logManager.insertInfo",
           "when": "editorTextFocus",
           "group": "navigation@51"
         },
         {
-          "command": "logManager.insertError",
+          "command": "logManager.insertDebug",
           "when": "editorTextFocus",
           "group": "navigation@52"
+        },
+        {
+          "command": "logManager.insertWarn",
+          "when": "editorTextFocus",
+          "group": "navigation@53"
+        },
+        {
+          "command": "logManager.insertError",
+          "when": "editorTextFocus",
+          "group": "navigation@54"
+        },
+        {
+          "command": "logManager.insertTable",
+          "when": "editorTextFocus",
+          "group": "navigation@55"
         }
       ]
     }
@@ -213,14 +246,11 @@
     "package": "npm run compile && vsce package"
   },
   "dependencies": {
-    "@babel/parser": "^7.25.8",
-    "@babel/traverse": "^7.25.7",
-    "@vue/compiler-sfc": "^3.5.13",
-    "minimatch": "^10.0.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@vue/compiler-sfc": "^3.5.13"
   },
   "devDependencies": {
+    "@babel/parser": "^7.25.8",
+    "@babel/traverse": "^7.25.7",
     "@types/babel__traverse": "^7.20.6",
     "@types/node": "^20.17.6",
     "@types/react": "^18.3.12",
@@ -229,6 +259,10 @@
     "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.24.0",
+    "lucide-react": "^1.14.0",
+    "minimatch": "^10.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }
