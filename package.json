@@ -1,0 +1,235 @@
+{
+  "name": "log-manager",
+  "displayName": "Log Manager",
+  "description": "Manage console statements across JavaScript and TypeScript projects from a visual VS Code dashboard.",
+  "version": "0.0.1",
+  "publisher": "local-dev",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://example.com/log-manager.git"
+  },
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "console",
+    "logs",
+    "debugging",
+    "typescript",
+    "javascript"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:logManager.openDashboard",
+    "onCommand:logManager.scanWorkspace",
+    "onCommand:logManager.insertLog",
+    "onCommand:logManager.insertWarn",
+    "onCommand:logManager.insertError",
+    "onCommand:logManager.removeCurrentFileLogs",
+    "onCommand:logManager.removeWorkspaceLogs",
+    "onCommand:logManager.commentCurrentFileLogs",
+    "onCommand:logManager.uncommentCurrentFileLogs"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "logManager.openDashboard",
+        "title": "Log Manager: Open Dashboard",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.scanWorkspace",
+        "title": "Log Manager: Scan Workspace",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.insertLog",
+        "title": "Log Manager: Insert Console Log",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.insertWarn",
+        "title": "Log Manager: Insert Console Warn",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.insertError",
+        "title": "Log Manager: Insert Console Error",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.removeCurrentFileLogs",
+        "title": "Log Manager: Remove Logs in Current File",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.removeWorkspaceLogs",
+        "title": "Log Manager: Remove Logs in Workspace",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.commentCurrentFileLogs",
+        "title": "Log Manager: Comment Logs in Current File",
+        "category": "Log Manager"
+      },
+      {
+        "command": "logManager.uncommentCurrentFileLogs",
+        "title": "Log Manager: Uncomment Logs in Current File",
+        "category": "Log Manager"
+      }
+    ],
+    "configuration": {
+      "title": "Log Manager",
+      "properties": {
+        "logManager.enabledMethods": {
+          "type": "array",
+          "default": [
+            "log",
+            "info",
+            "debug",
+            "warn",
+            "error",
+            "table"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "log",
+              "info",
+              "debug",
+              "warn",
+              "error",
+              "table"
+            ]
+          },
+          "description": "Console methods Log Manager scans and manages."
+        },
+        "logManager.defaultMethod": {
+          "type": "string",
+          "default": "log",
+          "enum": [
+            "log",
+            "info",
+            "debug",
+            "warn",
+            "error",
+            "table"
+          ],
+          "description": "Default console method used by insertion commands."
+        },
+        "logManager.includeFileName": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include file names in generated log labels."
+        },
+        "logManager.includeLineNumber": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include line numbers in generated log labels."
+        },
+        "logManager.includeFunctionName": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include surrounding function names in generated log labels when available."
+        },
+        "logManager.prefix": {
+          "type": "string",
+          "default": "[LM]",
+          "description": "Prefix used in generated log labels."
+        },
+        "logManager.quoteStyle": {
+          "type": "string",
+          "default": "double",
+          "enum": [
+            "double",
+            "single"
+          ],
+          "description": "Quote style for generated log labels."
+        },
+        "logManager.semicolon": {
+          "type": "boolean",
+          "default": true,
+          "description": "Append semicolons to generated logs."
+        },
+        "logManager.preserveMarker": {
+          "type": "string",
+          "default": "log-manager:keep",
+          "description": "Logs containing this marker are skipped by bulk destructive operations."
+        },
+        "logManager.generatedMarker": {
+          "type": "string",
+          "default": "[LM]",
+          "description": "Marker used to classify generated logs."
+        },
+        "logManager.excludeGlobs": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**",
+            "**/.git/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/coverage/**"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Glob patterns excluded from workspace scanning."
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "logManager.insertLog",
+          "when": "editorTextFocus",
+          "group": "navigation@50"
+        },
+        {
+          "command": "logManager.insertWarn",
+          "when": "editorTextFocus",
+          "group": "navigation@51"
+        },
+        {
+          "command": "logManager.insertError",
+          "when": "editorTextFocus",
+          "group": "navigation@52"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "npm run typecheck && npm run build",
+    "typecheck": "tsc --noEmit",
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "test": "npm run test:unit",
+    "test:unit": "vitest run",
+    "lint": "tsc --noEmit",
+    "package": "npm run compile && vsce package"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.25.8",
+    "@babel/traverse": "^7.25.7",
+    "@vue/compiler-sfc": "^3.5.13",
+    "minimatch": "^10.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/babel__traverse": "^7.20.6",
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/vscode": "^1.92.0",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

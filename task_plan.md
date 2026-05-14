@@ -11,8 +11,8 @@ Build a new VS Code extension that helps developers insert, inspect, filter, nav
 | 1. Context and competitor research | complete | Empty project confirmed. Turbo Console Log, related extensions, and VS Code APIs researched. |
 | 2. Design proposal | complete | User selected the full Webview dashboard approach. Design doc created. |
 | 3. Implementation plan | complete | Implementation plan created for TypeScript extension plus React Webview. |
-| 4. Scaffold extension | pending | TypeScript VS Code extension with tests and build tooling. |
-| 5. Implement log engine | pending | Parser-backed detection/insertion/removal for JS/TS. |
+| 4. Scaffold extension | complete | TypeScript VS Code extension scaffold compiles with placeholder commands. |
+| 5. Implement log engine | in_progress | Parser-backed detection now covers JS/TS/JSX/TSX console calls; Vue/scanning/editing/insertion still in progress. |
 | 6. Implement VS Code UI | pending | Commands, explorer tree, filtering, search, context actions. |
 | 7. Verify and package | pending | Compile, test, lint, package if tooling allows. |
 

@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "rootDir": ".",
+    "outDir": "out",
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "types": [
+      "node",
+      "vscode",
+      "vitest/globals"
+    ],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src",
+    "webview",
+    "test",
+    "vitest.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out"
+  ]
+}
