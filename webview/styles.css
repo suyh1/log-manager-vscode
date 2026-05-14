@@ -307,6 +307,31 @@ h2 {
   justify-content: space-between;
 }
 
+.segmented-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.segmented-control button {
+  min-height: 34px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.segmented-control button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.rail-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .diagnostics h2 {
   display: flex;
   align-items: center;
@@ -396,6 +421,23 @@ h2 {
   color: var(--muted);
   font-size: 11px;
   font-style: normal;
+}
+
+.source-badge {
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.source-badge.generated {
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+  color: var(--accent);
+}
+
+.source-badge.manual {
+  border-color: color-mix(in srgb, var(--amber) 58%, transparent);
+  color: var(--amber);
 }
 
 .preview-text {

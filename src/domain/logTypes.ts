@@ -2,6 +2,14 @@ export const LOG_METHODS = ["log", "info", "debug", "warn", "error", "table"] as
 
 export type LogMethod = (typeof LOG_METHODS)[number];
 
+export const CURRENT_FILE_CLEANUP_SCOPES = ["generated", "all"] as const;
+
+export type CurrentFileCleanupScope = (typeof CURRENT_FILE_CLEANUP_SCOPES)[number];
+
+export interface DashboardSettings {
+  currentFileCleanupScope: CurrentFileCleanupScope;
+}
+
 export interface SourcePosition {
   line: number;
   column: number;
@@ -54,6 +62,7 @@ export interface DashboardFilters {
 export interface DashboardState {
   result: ScanResult;
   filters: DashboardFilters;
+  settings: DashboardSettings;
   selectedLogId?: string;
   summary: LogSummary;
 }

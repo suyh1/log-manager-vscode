@@ -34,4 +34,12 @@ describe("extension manifest", () => {
       ])
     );
   });
+
+  it("contributes a setting for the current-file shortcut cleanup scope", () => {
+    expect(manifest.contributes.configuration.properties["logManager.currentFileCleanupScope"]).toMatchObject({
+      type: "string",
+      default: "generated",
+      enum: ["generated", "all"]
+    });
+  });
 });

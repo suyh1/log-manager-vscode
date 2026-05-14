@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getLogManagerConfig } from "../config";
+import { getDashboardSettings, getLogManagerConfig } from "../config";
 import { createCommentEdits, createDeleteEdits, createUncommentEdits, LogTextEdit } from "../core/logEditor";
 import { createEmptyScanResult, scanWorkspace } from "../core/logScanner";
 import { LogEntry, ScanResult } from "../domain/logTypes";
@@ -29,7 +29,7 @@ class DashboardWebviewController {
   async refresh(): Promise<void> {
     this.post({ type: "scanStarted" });
     this.scanResult = await scanWorkspace(getLogManagerConfig());
-    this.post({ type: "scanCompleted", result: this.scanResult });
+    this.post({ type: "scanCompleted", result: this.scanResult, settings: getDashboardSettings() });
   }
 
   private async handleMessage(message: unknown): Promise<void> {
@@ -56,6 +56,9 @@ class DashboardWebviewController {
         break;
       case "navigateToLog":
         await this.navigateToLog(message.logId);
+        break;
+      case "setCurrentFileCleanupScope":
+        await this.setCurrentFileCleanupScope(message.scope);
         break;
       case "deleteLogs":
         await this.applyOperation(message.logIds, "delete", message.includePreserved ?? false);
@@ -95,7 +98,27 @@ class DashboardWebviewController {
 
     await applyLogOperation(entries, operation, includePreserved);
     await this.refresh();
-    this.post({ type: "operationCompleted", result: this.scanResult, message: "Log operation completed." });
+    this.post({
+      type: "operationCompleted",
+      result: this.scanResult,
+      settings: getDashboardSettings(),
+      message: "Log operation completed."
+    });
+  }
+
+  private async setCurrentFileCleanupScope(scope: "generated" | "all"): Promise<void> {
+    await vscode.workspace.getConfiguration("logManager").update(
+      "currentFileCleanupScope",
+      scope,
+      vscode.ConfigurationTarget.Global
+    );
+    this.post({
+      type: "configurationUpdated",
+      settings: getDashboardSettings(),
+      message: scope === "generated"
+        ? "快捷清除当前文件时：只清除插件生成的日志。"
+        : "快捷清除当前文件时：清除所有 console 日志。"
+    });
   }
 
   private post(message: ExtensionMessage): void {

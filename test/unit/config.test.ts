@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_EXCLUDE_GLOBS,
   getLogManagerConfig,
+  normalizeCurrentFileCleanupScope,
   normalizeLogMethods
 } from "../../src/config";
 
@@ -28,6 +29,7 @@ describe("Log Manager config", () => {
     expect(config.semicolon).toBe(true);
     expect(config.preserveMarker).toBe("log-manager:keep");
     expect(config.generatedMarker).toBe("[LM]");
+    expect(config.currentFileCleanupScope).toBe("generated");
     expect(config.excludeGlobs).toEqual(DEFAULT_EXCLUDE_GLOBS);
   });
 
@@ -41,6 +43,12 @@ describe("Log Manager config", () => {
 
   it("falls back to all methods when enabled method overrides are empty", () => {
     expect(normalizeLogMethods(["nope"])).toEqual(["log", "info", "debug", "warn", "error", "table"]);
+  });
+
+  it("normalizes current file cleanup scope", () => {
+    expect(normalizeCurrentFileCleanupScope("all")).toBe("all");
+    expect(normalizeCurrentFileCleanupScope("generated")).toBe("generated");
+    expect(normalizeCurrentFileCleanupScope("unknown")).toBe("generated");
   });
 
   it("uses workspace overrides when they are valid", () => {
@@ -57,6 +65,7 @@ describe("Log Manager config", () => {
           semicolon: false,
           preserveMarker: "keep-me",
           generatedMarker: "[TRACE]",
+          currentFileCleanupScope: "all",
           excludeGlobs: ["**/.cache/**"]
         };
 
@@ -76,6 +85,7 @@ describe("Log Manager config", () => {
     expect(config.semicolon).toBe(false);
     expect(config.preserveMarker).toBe("keep-me");
     expect(config.generatedMarker).toBe("[TRACE]");
+    expect(config.currentFileCleanupScope).toBe("all");
     expect(config.excludeGlobs).toEqual(["**/.cache/**"]);
   });
 });

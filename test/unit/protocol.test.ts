@@ -9,6 +9,8 @@ describe("webview protocol", () => {
     expect(isWebviewMessage({ type: "deleteLogs", logIds: ["a"], includePreserved: false })).toBe(true);
     expect(isWebviewMessage({ type: "commentLogs", logIds: ["a"] })).toBe(true);
     expect(isWebviewMessage({ type: "uncommentLogs", logIds: ["a"] })).toBe(true);
+    expect(isWebviewMessage({ type: "setCurrentFileCleanupScope", scope: "generated" })).toBe(true);
+    expect(isWebviewMessage({ type: "setCurrentFileCleanupScope", scope: "all" })).toBe(true);
   });
 
   it("rejects unknown or malformed messages", () => {
@@ -16,5 +18,6 @@ describe("webview protocol", () => {
     expect(isWebviewMessage({ type: "missing" })).toBe(false);
     expect(isWebviewMessage({ type: "navigateToLog" })).toBe(false);
     expect(isWebviewMessage({ type: "deleteLogs", logIds: "a" })).toBe(false);
+    expect(isWebviewMessage({ type: "setCurrentFileCleanupScope", scope: "everything" })).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, MessageSquareText } from "lucide-react";
-import { LOG_METHODS, LogEntry, LogMethod, ScanResult } from "../src/domain/logTypes";
+import { CurrentFileCleanupScope, LOG_METHODS, LogEntry, LogMethod, ScanResult } from "../src/domain/logTypes";
 import type { ExtensionMessage, WebviewMessage } from "../src/webview/protocol";
 import { filterLogs, getUniqueFiles, summarizeLogs } from "./dashboardFilters";
 import { DetailPane } from "./components/DetailPane";
@@ -30,6 +30,7 @@ export function App() {
   const [error, setError] = useState<string | undefined>();
   const [notice, setNotice] = useState<string | undefined>();
   const [previewOperation, setPreviewOperation] = useState<PreviewOperation | undefined>();
+  const [currentFileCleanupScope, setCurrentFileCleanupScope] = useState<CurrentFileCleanupScope>("generated");
 
   useEffect(() => {
     const listener = (event: MessageEvent<ExtensionMessage>) => {
@@ -43,12 +44,18 @@ export function App() {
           break;
         case "scanCompleted":
           setResult(message.result);
+          setCurrentFileCleanupScope(message.settings.currentFileCleanupScope);
           setSelectedIds(new Set());
           setActiveId(message.result.entries[0]?.id);
           setLoading(false);
           break;
+        case "configurationUpdated":
+          setCurrentFileCleanupScope(message.settings.currentFileCleanupScope);
+          setNotice(message.message);
+          break;
         case "operationCompleted":
           setResult(message.result);
+          setCurrentFileCleanupScope(message.settings.currentFileCleanupScope);
           setSelectedIds(new Set());
           setPreviewOperation(undefined);
           setNotice(message.message);
@@ -121,6 +128,11 @@ export function App() {
     });
   }
 
+  function updateCurrentFileCleanupScope(scope: CurrentFileCleanupScope) {
+    setCurrentFileCleanupScope(scope);
+    post({ type: "setCurrentFileCleanupScope", scope });
+  }
+
   function openPreview(operation: PreviewOperation["type"]) {
     const entries = selectedEntries.length > 0 ? selectedEntries : visibleEntries;
     setPreviewOperation({ type: operation, entries });
@@ -188,10 +200,12 @@ export function App() {
           activeMethods={methods}
           activeFile={filePath}
           includePreserved={includePreserved}
+          currentFileCleanupScope={currentFileCleanupScope}
           diagnostics={result.diagnostics}
           onToggleMethod={toggleMethod}
           onFileChange={setFilePath}
           onIncludePreservedChange={setIncludePreserved}
+          onCurrentFileCleanupScopeChange={updateCurrentFileCleanupScope}
         />
 
         <LogTable

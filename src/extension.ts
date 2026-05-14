@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { getLogManagerConfig } from "./config";
+import { filterEntriesForCurrentFileCleanup } from "./core/currentFileCleanup";
 import { applyLogOperation, DashboardPanel, DashboardViewProvider } from "./webview/dashboardPanel";
 import { createInsertionText } from "./core/logInserter";
 import { scanTextDocument } from "./core/logScanner";
@@ -74,14 +75,19 @@ async function applyCurrentFileOperation(operation: "delete" | "comment" | "unco
     return;
   }
 
-  const result = scanTextDocument(editor.document, getLogManagerConfig());
+  const config = getLogManagerConfig();
+  const result = scanTextDocument(editor.document, config);
+  const entries = operation === "delete"
+    ? filterEntriesForCurrentFileCleanup(result.entries, config.currentFileCleanupScope)
+    : result.entries;
 
-  if (result.entries.length === 0) {
-    await vscode.window.showInformationMessage("No console statements found in the current file.");
+  if (entries.length === 0) {
+    const scopeText = config.currentFileCleanupScope === "generated" ? "generated console statements" : "console statements";
+    await vscode.window.showInformationMessage(`No ${scopeText} found in the current file.`);
     return;
   }
 
-  await applyLogOperation(result.entries, operation);
+  await applyLogOperation(entries, operation);
 }
 
 function getExpressionForSelection(document: vscode.TextDocument, selection: vscode.Selection): string | undefined {

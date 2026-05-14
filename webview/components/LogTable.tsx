@@ -24,7 +24,7 @@ export function LogTable(props: LogTableProps) {
         <span>Method</span>
         <span>Location</span>
         <span>Preview</span>
-        <span>Flags</span>
+        <span>Source</span>
         <span>Open</span>
       </div>
 
@@ -49,7 +49,9 @@ export function LogTable(props: LogTableProps) {
               </span>
               <span className="preview-text">{entry.preview || entry.text}</span>
               <span className="flag-stack">
-                {entry.isGenerated ? <em>generated</em> : <em>manual</em>}
+                <em className={entry.isGenerated ? "source-badge generated" : "source-badge manual"}>
+                  {entry.isGenerated ? "Plugin generated" : "User written"}
+                </em>
                 {entry.isPreserved ? <em>preserved</em> : null}
               </span>
               <span

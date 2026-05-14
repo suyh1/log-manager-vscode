@@ -1,5 +1,11 @@
 import * as vscode from "vscode";
-import { LOG_METHODS, LogMethod } from "./domain/logTypes";
+import {
+  CURRENT_FILE_CLEANUP_SCOPES,
+  CurrentFileCleanupScope,
+  DashboardSettings,
+  LOG_METHODS,
+  LogMethod
+} from "./domain/logTypes";
 
 export type QuoteStyle = "double" | "single";
 
@@ -22,6 +28,7 @@ export interface LogManagerConfig {
   semicolon: boolean;
   preserveMarker: string;
   generatedMarker: string;
+  currentFileCleanupScope: CurrentFileCleanupScope;
   excludeGlobs: string[];
 }
 
@@ -39,6 +46,7 @@ export function createDefaultConfig(): LogManagerConfig {
     semicolon: true,
     preserveMarker: "log-manager:keep",
     generatedMarker: "[LM]",
+    currentFileCleanupScope: "generated",
     excludeGlobs: DEFAULT_EXCLUDE_GLOBS
   };
 }
@@ -71,6 +79,12 @@ function normalizeQuoteStyle(value: unknown): QuoteStyle {
   return value === "single" ? "single" : "double";
 }
 
+export function normalizeCurrentFileCleanupScope(value: unknown): CurrentFileCleanupScope {
+  return typeof value === "string" && (CURRENT_FILE_CLEANUP_SCOPES as readonly string[]).includes(value)
+    ? (value as CurrentFileCleanupScope)
+    : "generated";
+}
+
 function normalizeStringArray(value: unknown, fallback: string[]): string[] {
   if (!Array.isArray(value)) {
     return fallback;
@@ -96,6 +110,15 @@ export function getLogManagerConfig(): LogManagerConfig {
     semicolon: configuration.get("semicolon", defaults.semicolon),
     preserveMarker: configuration.get("preserveMarker", defaults.preserveMarker),
     generatedMarker: configuration.get("generatedMarker", defaults.generatedMarker),
+    currentFileCleanupScope: normalizeCurrentFileCleanupScope(
+      configuration.get("currentFileCleanupScope", defaults.currentFileCleanupScope)
+    ),
     excludeGlobs: normalizeStringArray(configuration.get("excludeGlobs", defaults.excludeGlobs), defaults.excludeGlobs)
+  };
+}
+
+export function getDashboardSettings(config = getLogManagerConfig()): DashboardSettings {
+  return {
+    currentFileCleanupScope: config.currentFileCleanupScope
   };
 }
