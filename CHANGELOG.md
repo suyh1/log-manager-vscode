@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0
+
+- Added the Activity Bar dashboard entry and PNG extension icon.
+- Added default shortcuts for inserting a generated log and clearing current-file logs.
+- Added generated/manual log labels in the dashboard.
+- Added current-file cleanup scope configuration for generated-only or all logs.
+- Improved workspace scan performance with concurrent filesystem reads.
+- Added workspace scan caching so reopening the dashboard reuses cached results until files or scan settings change.
+
 ## 0.0.1
 
 - Added TypeScript VS Code extension scaffold.

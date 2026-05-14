@@ -26,7 +26,7 @@ npm run package
 2. 打开 Extensions 视图。
 3. 点击右上角 `...` 菜单。
 4. 选择 `Install from VSIX...`。
-5. 选择项目根目录下的 `log-manager-0.0.1.vsix`。
+5. 选择项目根目录下的 `log-manager-0.1.0.vsix`。
 
 开发调试时，可以在本项目中按 `F5` 启动 Extension Development Host。
 
@@ -34,13 +34,13 @@ npm run package
 
 ### 从侧边栏打开
 
-安装后，VS Code 左侧 Activity Bar 会出现 `Log Manager` 图标。点击这个图标即可打开插件侧边栏面板，面板会自动扫描当前工作区里的 `console.*`。
+安装后，VS Code 左侧 Activity Bar 会出现 `Log Manager` 图标。点击这个图标即可打开插件侧边栏面板。首次打开会扫描当前工作区里的 `console.*`，之后再次进入会优先使用缓存结果；文件创建、保存、删除或修改后缓存会失效，点击面板里的 `Scan` 可以强制重新扫描。
 
 ### 打开日志管理面板
 
 1. 在 VS Code 中按 `Command+Shift+P`。
 2. 输入并执行 `Log Manager: Open Dashboard`。
-3. 面板打开后会扫描当前工作区里的 `console.*`。
+3. 面板打开后会优先显示缓存结果；如果还没有缓存，会扫描当前工作区里的 `console.*`。
 
 面板里可以：
 
@@ -169,7 +169,7 @@ Install it in VS Code:
 2. Open the Extensions view.
 3. Click the `...` menu in the top-right corner.
 4. Choose `Install from VSIX...`.
-5. Select `log-manager-0.0.1.vsix` from the project root.
+5. Select `log-manager-0.1.0.vsix` from the project root.
 
 For development, press `F5` in this project to launch an Extension Development Host.
 
@@ -179,11 +179,13 @@ For development, press `F5` in this project to launch an Extension Development H
 
 After installation, VS Code shows a `Log Manager` icon in the Activity Bar. Click it to open the extension side bar view. The dashboard scans `console.*` statements in the current workspace automatically.
 
+The first open scans the workspace. Later opens reuse cached results. Creating, saving, deleting, or editing supported files invalidates the cache, and the dashboard `Scan` button forces a fresh scan.
+
 ### Open the Dashboard
 
 1. Press `Command+Shift+P` in VS Code.
 2. Run `Log Manager: Open Dashboard`.
-3. The dashboard scans `console.*` statements in the current workspace.
+3. The dashboard shows cached results first; if there is no cache yet, it scans `console.*` statements in the current workspace.
 
 In the dashboard, you can:
 

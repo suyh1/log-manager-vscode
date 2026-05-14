@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createDefaultConfig } from "../../src/config";
-import { scanSource } from "../../src/core/logScanner";
+import { scanSource, scanWorkspaceFiles } from "../../src/core/logScanner";
 
 describe("scanSource", () => {
   it("scans JavaScript and TypeScript files", () => {
@@ -42,5 +42,56 @@ describe("scanSource", () => {
       diagnostics: [],
       scannedFiles: 0
     });
+  });
+
+  it("scans workspace files concurrently and records read failures as diagnostics", async () => {
+    let activeReads = 0;
+    let maxActiveReads = 0;
+    const result = await scanWorkspaceFiles(
+      [
+        {
+          uri: "file:///project/a.ts",
+          filePath: "/project/a.ts",
+          readText: async () => {
+            activeReads += 1;
+            maxActiveReads = Math.max(maxActiveReads, activeReads);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            activeReads -= 1;
+            return "console.log('[LM] a');";
+          }
+        },
+        {
+          uri: "file:///project/b.ts",
+          filePath: "/project/b.ts",
+          readText: async () => {
+            activeReads += 1;
+            maxActiveReads = Math.max(maxActiveReads, activeReads);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            activeReads -= 1;
+            return "console.error('b');";
+          }
+        },
+        {
+          uri: "file:///project/broken.ts",
+          filePath: "/project/broken.ts",
+          readText: async () => {
+            throw new Error("read failed");
+          }
+        }
+      ],
+      createDefaultConfig(),
+      2
+    );
+
+    expect(maxActiveReads).toBe(2);
+    expect(result.scannedFiles).toBe(2);
+    expect(result.entries.map((entry) => entry.method)).toEqual(["log", "error"]);
+    expect(result.diagnostics).toEqual([
+      {
+        uri: "file:///project/broken.ts",
+        filePath: "/project/broken.ts",
+        message: "read failed"
+      }
+    ]);
   });
 });

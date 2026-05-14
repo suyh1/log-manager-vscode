@@ -2,7 +2,7 @@
   "name": "log-manager",
   "displayName": "Log Manager",
   "description": "Manage console statements across JavaScript and TypeScript projects from a visual VS Code dashboard.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "local-dev",
   "icon": "assets/icon.png",
   "private": true,

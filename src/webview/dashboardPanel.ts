@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
-import { getDashboardSettings, getLogManagerConfig } from "../config";
+import { getDashboardSettings } from "../config";
 import { createCommentEdits, createDeleteEdits, createUncommentEdits, LogTextEdit } from "../core/logEditor";
-import { createEmptyScanResult, scanWorkspace } from "../core/logScanner";
+import { WorkspaceScanCache } from "../core/scanCache";
+import { createEmptyScanResult } from "../core/logScanner";
 import { LogEntry, ScanResult } from "../domain/logTypes";
 import { ExtensionMessage, isWebviewMessage, WebviewMessage } from "./protocol";
 
@@ -12,7 +13,8 @@ class DashboardWebviewController {
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly webview: vscode.Webview
+    private readonly webview: vscode.Webview,
+    private readonly scanCache: WorkspaceScanCache
   ) {}
 
   bind(): void {
@@ -26,9 +28,9 @@ class DashboardWebviewController {
     });
   }
 
-  async refresh(): Promise<void> {
+  async refresh(force = false): Promise<void> {
     this.post({ type: "scanStarted" });
-    this.scanResult = await scanWorkspace(getLogManagerConfig());
+    this.scanResult = force ? await this.scanCache.scanFresh() : await this.scanCache.getCachedOrScan();
     this.post({ type: "scanCompleted", result: this.scanResult, settings: getDashboardSettings() });
   }
 
@@ -51,8 +53,10 @@ class DashboardWebviewController {
   private async handleWebviewMessage(message: WebviewMessage): Promise<void> {
     switch (message.type) {
       case "ready":
+        await this.refresh(false);
+        break;
       case "scanWorkspace":
-        await this.refresh();
+        await this.refresh(true);
         break;
       case "navigateToLog":
         await this.navigateToLog(message.logId);
@@ -97,7 +101,8 @@ class DashboardWebviewController {
     }
 
     await applyLogOperation(entries, operation, includePreserved);
-    await this.refresh();
+    this.scanCache.invalidate();
+    await this.refresh(true);
     this.post({
       type: "operationCompleted",
       result: this.scanResult,
@@ -152,22 +157,22 @@ export class DashboardPanel {
   private readonly panel: vscode.WebviewPanel;
   private readonly controller: DashboardWebviewController;
 
-  static show(extensionUri: vscode.Uri): void {
+  static show(extensionUri: vscode.Uri, scanCache: WorkspaceScanCache, forceScan = false): void {
     if (DashboardPanel.current) {
       DashboardPanel.current.panel.reveal(vscode.ViewColumn.One);
-      void DashboardPanel.current.controller.refresh();
+      void DashboardPanel.current.controller.refresh(forceScan);
       return;
     }
 
-    DashboardPanel.current = new DashboardPanel(extensionUri);
+    DashboardPanel.current = new DashboardPanel(extensionUri, scanCache);
   }
 
-  private constructor(extensionUri: vscode.Uri) {
+  private constructor(extensionUri: vscode.Uri, scanCache: WorkspaceScanCache) {
     this.panel = vscode.window.createWebviewPanel("logManager.dashboard", "Log Manager", vscode.ViewColumn.One, {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.joinPath(extensionUri, "dist", "webview")]
     });
-    this.controller = new DashboardWebviewController(extensionUri, this.panel.webview);
+    this.controller = new DashboardWebviewController(extensionUri, this.panel.webview, scanCache);
     this.controller.bind();
 
     this.panel.onDidDispose(() => {
@@ -180,12 +185,15 @@ export class DashboardViewProvider implements vscode.WebviewViewProvider {
   static readonly viewType = "logManager.dashboardView";
   private controller: DashboardWebviewController | undefined;
 
-  constructor(private readonly extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly extensionUri: vscode.Uri,
+    private readonly scanCache: WorkspaceScanCache
+  ) {}
 
   resolveWebviewView(webviewView: vscode.WebviewView): void {
-    this.controller = new DashboardWebviewController(this.extensionUri, webviewView.webview);
+    this.controller = new DashboardWebviewController(this.extensionUri, webviewView.webview, this.scanCache);
     this.controller.bind();
-    void this.controller.refresh();
+    void this.controller.refresh(false);
   }
 }
 

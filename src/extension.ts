@@ -1,20 +1,52 @@
 import * as vscode from "vscode";
 import { getLogManagerConfig } from "./config";
 import { filterEntriesForCurrentFileCleanup } from "./core/currentFileCleanup";
+import { createScanCacheKey, WorkspaceScanCache } from "./core/scanCache";
 import { applyLogOperation, DashboardPanel, DashboardViewProvider } from "./webview/dashboardPanel";
 import { createInsertionText } from "./core/logInserter";
-import { scanTextDocument } from "./core/logScanner";
+import { scanTextDocument, scanWorkspace } from "./core/logScanner";
+import { SUPPORTED_WORKSPACE_GLOB, isSupportedLogFile } from "./core/workspaceFiles";
 import { LogMethod } from "./domain/logTypes";
 
 export function activate(context: vscode.ExtensionContext) {
+  const scanCache = new WorkspaceScanCache(
+    () => scanWorkspace(getLogManagerConfig()),
+    () => createScanCacheKey(getLogManagerConfig())
+  );
+  const watcher = vscode.workspace.createFileSystemWatcher(SUPPORTED_WORKSPACE_GLOB);
+
   context.subscriptions.push(
+    watcher,
+    watcher.onDidCreate(() => scanCache.invalidate()),
+    watcher.onDidChange(() => scanCache.invalidate()),
+    watcher.onDidDelete(() => scanCache.invalidate()),
+    vscode.workspace.onDidSaveTextDocument((document) => {
+      if (isSupportedLogFile(document.fileName)) {
+        scanCache.invalidate();
+      }
+    }),
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (isSupportedLogFile(event.document.fileName)) {
+        scanCache.invalidate();
+      }
+    }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (
+        event.affectsConfiguration("logManager.enabledMethods") ||
+        event.affectsConfiguration("logManager.generatedMarker") ||
+        event.affectsConfiguration("logManager.preserveMarker") ||
+        event.affectsConfiguration("logManager.excludeGlobs")
+      ) {
+        scanCache.invalidate();
+      }
+    }),
     vscode.window.registerWebviewViewProvider(
       DashboardViewProvider.viewType,
-      new DashboardViewProvider(context.extensionUri),
+      new DashboardViewProvider(context.extensionUri, scanCache),
       { webviewOptions: { retainContextWhenHidden: true } }
     ),
-    vscode.commands.registerCommand("logManager.openDashboard", () => DashboardPanel.show(context.extensionUri)),
-    vscode.commands.registerCommand("logManager.scanWorkspace", () => DashboardPanel.show(context.extensionUri)),
+    vscode.commands.registerCommand("logManager.openDashboard", () => DashboardPanel.show(context.extensionUri, scanCache)),
+    vscode.commands.registerCommand("logManager.scanWorkspace", () => DashboardPanel.show(context.extensionUri, scanCache, true)),
     vscode.commands.registerCommand("logManager.insertLog", () => insertConsoleStatement("log")),
     vscode.commands.registerCommand("logManager.insertInfo", () => insertConsoleStatement("info")),
     vscode.commands.registerCommand("logManager.insertDebug", () => insertConsoleStatement("debug")),
@@ -22,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("logManager.insertError", () => insertConsoleStatement("error")),
     vscode.commands.registerCommand("logManager.insertTable", () => insertConsoleStatement("table")),
     vscode.commands.registerCommand("logManager.removeCurrentFileLogs", () => applyCurrentFileOperation("delete")),
-    vscode.commands.registerCommand("logManager.removeWorkspaceLogs", () => DashboardPanel.show(context.extensionUri)),
+    vscode.commands.registerCommand("logManager.removeWorkspaceLogs", () => DashboardPanel.show(context.extensionUri, scanCache, true)),
     vscode.commands.registerCommand("logManager.commentCurrentFileLogs", () => applyCurrentFileOperation("comment")),
     vscode.commands.registerCommand("logManager.uncommentCurrentFileLogs", () => applyCurrentFileOperation("uncomment"))
   );
