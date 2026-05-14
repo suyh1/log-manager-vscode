@@ -1,12 +1,17 @@
 import * as vscode from "vscode";
 import { getLogManagerConfig } from "./config";
-import { applyLogOperation, DashboardPanel } from "./webview/dashboardPanel";
+import { applyLogOperation, DashboardPanel, DashboardViewProvider } from "./webview/dashboardPanel";
 import { createInsertionText } from "./core/logInserter";
 import { scanTextDocument } from "./core/logScanner";
 import { LogMethod } from "./domain/logTypes";
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      DashboardViewProvider.viewType,
+      new DashboardViewProvider(context.extensionUri),
+      { webviewOptions: { retainContextWhenHidden: true } }
+    ),
     vscode.commands.registerCommand("logManager.openDashboard", () => DashboardPanel.show(context.extensionUri)),
     vscode.commands.registerCommand("logManager.scanWorkspace", () => DashboardPanel.show(context.extensionUri)),
     vscode.commands.registerCommand("logManager.insertLog", () => insertConsoleStatement("log")),

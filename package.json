@@ -4,6 +4,7 @@
   "description": "Manage console statements across JavaScript and TypeScript projects from a visual VS Code dashboard.",
   "version": "0.0.1",
   "publisher": "local-dev",
+  "icon": "assets/icon.png",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -36,9 +37,28 @@
     "onCommand:logManager.removeCurrentFileLogs",
     "onCommand:logManager.removeWorkspaceLogs",
     "onCommand:logManager.commentCurrentFileLogs",
-    "onCommand:logManager.uncommentCurrentFileLogs"
+    "onCommand:logManager.uncommentCurrentFileLogs",
+    "onView:logManager.dashboardView"
   ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "logManager",
+          "title": "Log Manager",
+          "icon": "assets/activitybar.svg"
+        }
+      ]
+    },
+    "views": {
+      "logManager": [
+        {
+          "id": "logManager.dashboardView",
+          "name": "Dashboard",
+          "type": "webview"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "logManager.openDashboard",
@@ -233,7 +253,21 @@
           "group": "navigation@55"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "logManager.insertLog",
+        "key": "ctrl+alt+l",
+        "mac": "cmd+alt+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "logManager.removeCurrentFileLogs",
+        "key": "ctrl+alt+d",
+        "mac": "cmd+alt+d",
+        "when": "editorTextFocus"
+      }
+    ]
   },
   "scripts": {
     "compile": "npm run typecheck && npm run build",
@@ -255,7 +289,7 @@
     "@types/node": "^20.17.6",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@types/vscode": "^1.92.0",
+    "@types/vscode": "^1.110.0",
     "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.24.0",

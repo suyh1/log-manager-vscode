@@ -5,36 +5,31 @@ import { createEmptyScanResult, scanWorkspace } from "../core/logScanner";
 import { LogEntry, ScanResult } from "../domain/logTypes";
 import { ExtensionMessage, isWebviewMessage, WebviewMessage } from "./protocol";
 
-export class DashboardPanel {
-  private static current: DashboardPanel | undefined;
-  private readonly panel: vscode.WebviewPanel;
+type LogOperation = "delete" | "comment" | "uncomment";
+
+class DashboardWebviewController {
   private scanResult: ScanResult = createEmptyScanResult();
 
-  static show(extensionUri: vscode.Uri) {
-    if (DashboardPanel.current) {
-      DashboardPanel.current.panel.reveal(vscode.ViewColumn.One);
-      void DashboardPanel.current.refresh();
-      return;
-    }
+  constructor(
+    private readonly extensionUri: vscode.Uri,
+    private readonly webview: vscode.Webview
+  ) {}
 
-    DashboardPanel.current = new DashboardPanel(extensionUri);
-  }
-
-  private constructor(private readonly extensionUri: vscode.Uri) {
-    this.panel = vscode.window.createWebviewPanel("logManager.dashboard", "Log Manager", vscode.ViewColumn.One, {
+  bind(): void {
+    this.webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.joinPath(extensionUri, "dist", "webview")]
-    });
-
-    this.panel.webview.html = this.createHtml();
-
-    this.panel.onDidDispose(() => {
-      DashboardPanel.current = undefined;
-    });
-
-    this.panel.webview.onDidReceiveMessage((message: unknown) => {
+      localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, "dist", "webview")]
+    };
+    this.webview.html = this.createHtml();
+    this.webview.onDidReceiveMessage((message: unknown) => {
       void this.handleMessage(message);
     });
+  }
+
+  async refresh(): Promise<void> {
+    this.post({ type: "scanStarted" });
+    this.scanResult = await scanWorkspace(getLogManagerConfig());
+    this.post({ type: "scanCompleted", result: this.scanResult });
   }
 
   private async handleMessage(message: unknown): Promise<void> {
@@ -74,12 +69,6 @@ export class DashboardPanel {
     }
   }
 
-  private async refresh(): Promise<void> {
-    this.post({ type: "scanStarted" });
-    this.scanResult = await scanWorkspace(getLogManagerConfig());
-    this.post({ type: "scanCompleted", result: this.scanResult });
-  }
-
   private async navigateToLog(logId: string): Promise<void> {
     const entry = this.scanResult.entries.find((candidate) => candidate.id === logId);
 
@@ -96,11 +85,7 @@ export class DashboardPanel {
     });
   }
 
-  private async applyOperation(
-    logIds: readonly string[],
-    operation: "delete" | "comment" | "uncomment",
-    includePreserved: boolean
-  ): Promise<void> {
+  private async applyOperation(logIds: readonly string[], operation: LogOperation, includePreserved: boolean): Promise<void> {
     const entries = this.scanResult.entries.filter((entry) => logIds.includes(entry.id));
 
     if (entries.length === 0) {
@@ -114,20 +99,20 @@ export class DashboardPanel {
   }
 
   private post(message: ExtensionMessage): void {
-    void this.panel.webview.postMessage(message);
+    void this.webview.postMessage(message);
   }
 
   private createHtml(): string {
     const nonce = createNonce();
-    const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist", "webview", "main.js"));
-    const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist", "webview", "main.css"));
+    const scriptUri = this.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist", "webview", "main.js"));
+    const styleUri = this.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist", "webview", "main.css"));
 
     return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${this.panel.webview.cspSource}; script-src 'nonce-${nonce}';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${this.webview.cspSource}; script-src 'nonce-${nonce}';">
     <link rel="stylesheet" href="${styleUri}">
     <title>Log Manager</title>
   </head>
@@ -139,9 +124,51 @@ export class DashboardPanel {
   }
 }
 
+export class DashboardPanel {
+  private static current: DashboardPanel | undefined;
+  private readonly panel: vscode.WebviewPanel;
+  private readonly controller: DashboardWebviewController;
+
+  static show(extensionUri: vscode.Uri): void {
+    if (DashboardPanel.current) {
+      DashboardPanel.current.panel.reveal(vscode.ViewColumn.One);
+      void DashboardPanel.current.controller.refresh();
+      return;
+    }
+
+    DashboardPanel.current = new DashboardPanel(extensionUri);
+  }
+
+  private constructor(extensionUri: vscode.Uri) {
+    this.panel = vscode.window.createWebviewPanel("logManager.dashboard", "Log Manager", vscode.ViewColumn.One, {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.joinPath(extensionUri, "dist", "webview")]
+    });
+    this.controller = new DashboardWebviewController(extensionUri, this.panel.webview);
+    this.controller.bind();
+
+    this.panel.onDidDispose(() => {
+      DashboardPanel.current = undefined;
+    });
+  }
+}
+
+export class DashboardViewProvider implements vscode.WebviewViewProvider {
+  static readonly viewType = "logManager.dashboardView";
+  private controller: DashboardWebviewController | undefined;
+
+  constructor(private readonly extensionUri: vscode.Uri) {}
+
+  resolveWebviewView(webviewView: vscode.WebviewView): void {
+    this.controller = new DashboardWebviewController(this.extensionUri, webviewView.webview);
+    this.controller.bind();
+    void this.controller.refresh();
+  }
+}
+
 export async function applyLogOperation(
   entries: readonly LogEntry[],
-  operation: "delete" | "comment" | "uncomment",
+  operation: LogOperation,
   includePreserved = false
 ): Promise<void> {
   const byUri = groupEntriesByUri(entries);
@@ -164,7 +191,7 @@ export async function applyLogOperation(
 function createEdits(
   source: string,
   entries: readonly LogEntry[],
-  operation: "delete" | "comment" | "uncomment",
+  operation: LogOperation,
   includePreserved: boolean
 ): LogTextEdit[] {
   switch (operation) {

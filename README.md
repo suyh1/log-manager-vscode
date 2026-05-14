@@ -32,6 +32,10 @@ npm run package
 
 ## 怎么使用
 
+### 从侧边栏打开
+
+安装后，VS Code 左侧 Activity Bar 会出现 `Log Manager` 图标。点击这个图标即可打开插件侧边栏面板，面板会自动扫描当前工作区里的 `console.*`。
+
 ### 打开日志管理面板
 
 1. 在 VS Code 中按 `Command+Shift+P`。
@@ -63,6 +67,13 @@ npm run package
 console.log("[LM] account.ts:12 user", user);
 ```
 
+默认快捷键：
+
+- macOS：`Command+Alt+L`
+- Windows / Linux：`Ctrl+Alt+L`
+
+如果你想改成和 Turbo Console Log 类似的个人习惯快捷键，可以在 VS Code 中打开 `Keyboard Shortcuts`，搜索 `Log Manager: Insert Console Log`，然后绑定自己的快捷键。
+
 ### 管理当前文件日志
 
 在命令面板执行：
@@ -72,6 +83,13 @@ console.log("[LM] account.ts:12 user", user);
 - `Log Manager: Uncomment Logs in Current File`
 
 这些命令只作用于当前打开的文件。
+
+清除当前文件日志的默认快捷键：
+
+- macOS：`Command+Alt+D`
+- Windows / Linux：`Ctrl+Alt+D`
+
+也可以在 `Keyboard Shortcuts` 中搜索 `Log Manager: Remove Logs in Current File` 自定义快捷键。
 
 ### 管理整个项目日志
 
@@ -153,6 +171,10 @@ For development, press `F5` in this project to launch an Extension Development H
 
 ## How to Use
 
+### Open from the Side Bar
+
+After installation, VS Code shows a `Log Manager` icon in the Activity Bar. Click it to open the extension side bar view. The dashboard scans `console.*` statements in the current workspace automatically.
+
 ### Open the Dashboard
 
 1. Press `Command+Shift+P` in VS Code.
@@ -184,6 +206,13 @@ The extension inserts a log below the current line, for example:
 console.log("[LM] account.ts:12 user", user);
 ```
 
+Default shortcut:
+
+- macOS: `Command+Alt+L`
+- Windows / Linux: `Ctrl+Alt+L`
+
+To use your own Turbo Console Log-style shortcut, open VS Code `Keyboard Shortcuts`, search for `Log Manager: Insert Console Log`, and assign your preferred keybinding.
+
 ### Manage Logs in the Current File
 
 Run these commands from the Command Palette:
@@ -193,6 +222,13 @@ Run these commands from the Command Palette:
 - `Log Manager: Uncomment Logs in Current File`
 
 These commands only affect the currently open file.
+
+Default shortcut for removing logs in the current file:
+
+- macOS: `Command+Alt+D`
+- Windows / Linux: `Ctrl+Alt+D`
+
+You can customize it by searching for `Log Manager: Remove Logs in Current File` in `Keyboard Shortcuts`.
 
 ### Manage Logs Across the Project
 
